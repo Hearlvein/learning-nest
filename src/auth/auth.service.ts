@@ -1,10 +1,10 @@
-import { ForbiddenException, Injectable } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
-import { JwtService } from "@nestjs/jwt";
-import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+import { ForbiddenException, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import * as argon from 'argon2';
-import { PrismaService } from "src/prisma/prisma.service";
-import { AuthDto } from "./dto";
+import { PrismaService } from '../prisma/prisma.service';
+import { AuthDto } from './dto';
 
 @Injectable()
 export class AuthService {
@@ -13,7 +13,7 @@ export class AuthService {
 		private jwt: JwtService,
 		private config: ConfigService,
 	) {}
-	
+
 	async signup(dto: AuthDto) {
 		// generate the password
 		const hash = await argon.hash(dto.password);
@@ -27,7 +27,6 @@ export class AuthService {
 			});
 
 			return this.signToken(user.id, user.email);
-
 		} catch (error) {
 			if (error instanceof PrismaClientKnownRequestError) {
 				if (error.code === 'P2002') {
@@ -37,7 +36,7 @@ export class AuthService {
 			throw error;
 		}
 	}
-		
+
 	async signin(dto: AuthDto) {
 		// find the user by email
 		const user = await this.prisma.user.findUnique({
@@ -61,8 +60,11 @@ export class AuthService {
 		return this.signToken(user.id, user.email);
 	}
 
-	async signToken(userId: number, email: string): Promise<{
-		access_token: string
+	async signToken(
+		userId: number,
+		email: string,
+	): Promise<{
+		access_token: string;
 	}> {
 		const payload = {
 			sub: userId,
@@ -70,13 +72,10 @@ export class AuthService {
 		};
 
 		const secret = this.config.get('JWT_SECRET');
-		const token = await this.jwt.signAsync(
-			payload,
-			{
-				expiresIn: '15m',
-				secret,
-			},
-		);
+		const token = await this.jwt.signAsync(payload, {
+			expiresIn: '15m',
+			secret,
+		});
 
 		return {
 			access_token: token,
